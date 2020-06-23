@@ -1,0 +1,104 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<link rel="shortcut icon" href="{% static 'index/images/favicon.ico' %}">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.bootcss.com/twitter-bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{% static 'index/css/index.css' %}" rel="stylesheet"/>
+    <title>中英文商品评论情感分析</title>
+</head>
+<body>
+<div class="container">
+    <div class="col">
+        <form class="form-login" action="" method="post">
+            {% csrf_token %}
+            <h1 class="text-center">中英文商品评论情感分析</h1>
+            <h5 class="text-center">在下面输入一段评论，判断你的情感倾向</h5>
+            <div class="form-group">
+                <span style="font-size:18px;">
+                    你已经输入 <span id="counter">{{ input_length|default:0 }}</span> 个字（词）.<br/>
+                    <textarea class="form-control" rows="4" maxlength=140
+                              style="border: 1px; resize: none; width: 100%; background-color: #eee"
+                              id="postWeiboText" onkeydown='countChar("postWeiboText","counter");'
+                              onkeyup='countChar("postWeiboText","counter");' autocomplete="on"
+                              name="text">{{ input|default:"" }}</textarea></span>
+            </div>
+
+
+            <div id="feedback" style="background-color: rgba(255,255,255,0.4)">
+
+                <div id="sendButton">
+                    <button type="submit" class="btn btn-primary float-right">
+                        中英文分析
+                    </button>
+
+
+                </div>
+
+                {% if label %}
+                    <p>你输入得文本情感倾向是: {{ label|default:"" }}</p>
+                    <label>预测错误?告诉我们你输入得句子情感倾向将更加有助于系统的改善.</label>
+                    <select id="feedbackSelect">
+                        <option value=1>Positive</option>
+                        <option value=0>Negative</option>
+                    </select>
+                    <button id="sendFeedbackButton" type="button" onclick="sendFeedback()"
+                            class="btn btn-primary">
+                        模型反馈
+                    </button>
+                {% endif %}
+
+            </div>
+
+
+        </form>
+
+    </div>
+</div> <!-- /container -->
+
+<script>
+    function countChar(textareaName,spanName) {
+<!--        document.getElementById("sendFeedbackButton").disabled = "disabled";-->
+        var s = document.getElementById(textareaName).value;
+        s = s.replace(/(^\s*)|(\s*$)/gi,"");    // exclude start and end white-space
+        s = s.replace(/[ ]{2,}/gi," ");         // 2 or more space to 1
+        s = s.replace(/\n /,"\n");              // exclude newline with a start spacing
+        s = s.replace("\n"," ");
+        var count = s.split(' ').filter(function(str){return str!="";}).length.toString();
+        document.getElementById(spanName).innerHTML = count;
+    }
+
+    function sendFeedback() {
+            var feedback=document.getElementById("feedbackSelect").value;
+            $.ajax({
+                url:"/train",
+                type:"get",
+                data:{
+                    text: "{{ input|default:"" }}",
+                    feedback: feedback
+                },
+                success:function(result){
+                    console.log(result);
+                    console.log("success");
+                    alert("Send feedback successfully. Thank you!");
+                },
+                error:function(){
+                    alert("Network Error");
+                }
+            })
+    }
+</script>
+
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.js"></script>
+<script src="https://cdn.bootcss.com/popper.js/1.15.0/umd/popper.js"></script>
+<script src="https://cdn.bootcss.com/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+</body>
+</html>
+
